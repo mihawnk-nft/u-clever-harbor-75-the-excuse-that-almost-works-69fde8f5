@@ -52,8 +52,19 @@ def main() -> int:
         return 1
     os.makedirs(out_dir, exist_ok=True)
     path = os.path.join(out_dir, "entry.txt")
-    with open(path, "w", encoding="utf-8", newline="\n") as f:
-        f.write(EXCUSE + "\n")
+    payload = (EXCUSE + "\n").encode("utf-8")
+    with open(path, "wb") as f:
+        f.write(payload)
+    # Read back what the grader will read: the file must hold exactly the
+    # line above, one line, valid UTF-8, inside the gate. A mismatch here
+    # means the write did not land as intended, so fail loudly instead
+    # of letting a corrupt entry through to the judge.
+    with open(path, "rb") as f:
+        written = f.read()
+    if written != payload:
+        print(f"{path} read back {len(written)} bytes, expected "
+              f"{len(payload)}", file=sys.stderr)
+        return 1
     print(f"wrote {path} ({len(words)} words, {len(EXCUSE)} chars)")
     return 0
 
